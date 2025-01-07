@@ -1,0 +1,403 @@
+{% comment %} Sections: ywm-exit-intent.liquid {% endcomment %}
+{% comment %} https://github.com/yellowwebmonkey/shopify-features/blob/d3566f35e847c44b761a6cc73f7f59b3b5bad04e/Sections/ywm-exit-intent.liquid  {% endcomment %}
+{% comment %} Section shows last chance offer on user exit from site {% endcomment %}
+
+  {{ 'ywm-modal-styling.css' | asset_url | stylesheet_tag }}
+
+<style>
+.exit-popup {}  
+.exit-popup .modal__inner {width:550px;max-width:90vw;margin:0 auto;margin-top:20%;}
+.exit-popup .modal__inner .modal__centered {flex:0 1 100%;border:4px solid #333;color:#555;}
+.exit-popup .rte{margin-top:20px;margin-bottom:20px;}
+.exit-popup .exit-popup__btns-wrapper {display:flex;flex-wrap:wrap;justify-content:center;grid-gap:10px;gap:10px;}
+.exit-popup__background-image-wrapper {overflow:hidden;width:100%;height:100%;position:absolute;}
+.exit-popup__background-image {background-size:cover;width:100%;height:100%;}
+.exit-popup__content-wrapper{text-align:center;margin:0 auto;}
+.exit-popup.exit-popup--image-false .modal__inner{box-shadow:none;}
+.exit-popup.modal--mobile-friendly {top:0px;bottom: 0;overflow: auto;}
+.exit-popup.modal--mobile-friendly.modal--square .modal__centered-content {background-color: #1c1d1d;}
+.exit-popup__content--active,.exit-popup__decline-content--active{opacity:1;transition:opacity 1.5s ease-in;}
+.exit-popup__content--inactive,.exit-popup__content--inactive *,.exit-popup__content--inactive .btn,.exit-popup__decline-content--inactive,.exit-popup__decline-content--inactive *,.exit-popup__decline-content--inactive .btn{opacity:0;width:0;height:0;position:absolute;visibility:hidden;border:0;line-height:0;font-size:0;margin:0;padding:0;}
+.exit-popup.exit-popup--image-false,.exit-popup.exit-popup--image-false.modal:before {background-color: #fff;}
+.exit-popup__btns-wrapper .btn {flex:1 0 100%;}
+.exit-popup__btns-wrapper .btn:not(.btn--secondary){order:1;}
+.exit-popup__btns-wrapper .btn--secondary{order:2;text-transform:capitalize;font-weight:100;border:none;letter-spacing:.05em;}
+.exit-popup.exit-popup--image-false, .exit-popup.exit-popup--image-false.modal:before {background-color: rgba(255,255,255,0.75);}
+
+@media only screen and (max:480px) {
+  .exit-popup__content-wrapper {max-width:95vw;}
+}
+@media only screen and (min-width:769px) {
+  .exit-popup__content-wrapper {max-width:520px;}
+  .exit-popup .rte {margin-bottom:30px;}
+  .exit-popup .modal__inner .modal__centered .modal__centered-content {padding: 45px 25px;}
+}
+</style>
+
+{% capture cart_limits %}
+  {% assign top =  section.settings.cart_cost| times: 100 %}
+  {% if section.settings.cart_count == false %}true
+  {% elsif cart.item_count == 0 and section.settings.cart_count == true %}false
+  {% elsif cart.total_price < top %}false{% else %}true{% endif %}
+{% endcapture %}
+{% assign cart_limits = cart_limits | strip %}
+
+{%  capture timer %}
+  {% assign hour = "now" | date: "%H" %}
+  {% assign min = "now" | date: "%M"  %}
+    {% assign min = min | plus: section.settings.timer_set %}
+   <div class="countdown__block countdown__block--timer">
+            <countdown-timer
+              data-year="{{ "now" | date: "%Y" }}"
+              data-month="{{ "now" | date: "%m" }}"
+              data-day="{{ "now" | date: "%d" }}"
+              data-hour="{{ "now" | date: "%H" }}"            
+              data-minute="{{ min }}"
+              data-hide-timer="false"
+              data-complete-message="Offer expired"
+            >
+              <div class="countdown__display countdown__display--visible" data-time-display>
+                <div class="countdown__display-block" style="display:none;"><h2 class="h3" date-days-placeholder>12</h2><span>DAYS</span></div>
+                <div class="countdown__display-block" style="display:none;"><h2 class="h3" date-hours-placeholder>12</h2><span>HOURS</span></div>              
+                <div class="countdown__display-block">
+                  <h2 class="h3" date-minutes-placeholder>12</h2>
+                <span>MINUTES</span>
+                </div>
+                <div class="countdown__display-block">
+                  <h2 class="h3" date-seconds-placeholder>59</h2>
+                  <span>SECONDS</span>
+                </div>
+              </div>
+              {% if block.settings.text != blank %}
+                <div class="countdown__timer-message" data-message-placeholder>{{ block.settings.text }}</div>
+              {% endif %}
+            </countdown-timer>
+          </div>
+  {% endcapture %}
+
+  
+{% if section.settings.enable_exit_popup %}
+              <exit-popup 
+                id="ExitPopup-{{ section.id }}"
+                class="exit-popup modal modal--square modal--mobile-friendly 
+              {% if section.settings.bg_image != blank or section.settings.background_transparent %}exit-popup--image-true
+              {% else %}exit-popup--image-false{% endif %} {{ section.settings.enable_exit_popup }}"
+                data-enabled="{{ section.settings.enable_exit_popup }}"
+                data-test-mode="{{ section.settings.enable_test_mode }}"
+                data-section-id="{{ section.id }}"
+              >
+
+                {% if section.settings.bg_image != blank or section.settings.background_transparent %}
+                  <div class="exit-popup__background-image-wrapper">
+                    <div class="exit-popup__background-image" data-background-image></div>
+                  </div>
+                  {% style %}
+                    {% if section.settings.bg_image != blank %}
+                            .exit-popup__background-image {
+                              background-image: url({{ section.settings.bg_image | image_url: width: '2400' }});
+                              {% if section.settings.blur_image %}
+                                filter: blur(4px);
+                                transform: scale(1.03);
+                              {% endif %}
+                      {%  else %}
+                          .exit-popup__background-image {
+                              background-color: #000000;opacity:0.{{ section.settings.background_opacity}};
+                      {% endif %}
+                    }
+                  {% endstyle %}
+                {% endif %}
+              
+                <div class="modal__inner">
+                  <div class="modal__centered">
+                    <div
+                      class="modal__centered-content modal__centered-content--padded">
+                      <div class="exit-popup__content-wrapper">
+                        <div class="exit-popup__content exit-popup__content--active" data-exit-popup-content>
+
+                          {% if section.settings.heading != blank %}
+                            <h2>{{ section.settings.heading }}</h2>
+                          {% endif %}
+
+                          {% if section.settings.subheading != blank %}
+                            <h3>{{ section.settings.subheading }}</h3>
+                          {% endif %}  
+ 
+                          {% if section.settings.text != blank %}
+                            <h4 class="rte">{{ section.settings.text }}</h4>
+                          {% endif %}
+
+      {% if section.settings.image %}
+        <div class="exit-image" style="float:left;margin:-25px auto 25px auto;">
+            {{ section.settings.image | img_tag: '120x' }}
+        </div>
+    {% endif %} 
+  
+                          {% if section.settings.show_timer %}{{ timer }}{% endif %}
+  
+                           {% if section.settings.approve_button_label != blank %}<div class="clear"></div>
+                              <div><a href="{{ section.settings.button_url }}" class="btn" style="width:80%;background:{{ section.settings.button_color }}">{{ section.settings.approve_button_label }}</a></div>
+                            {% endif %}
+                            {% if section.settings.decline_button_label != blank %}<br/>
+                              <div><a href="" class="continue-shopping" style="color:#666;">{{ section.settings.decline_button_label }}</a></div>
+                            {% endif %}
+
+
+                          
+                          
+                          {% if section.settings.decline_button_label != blank and section.settings.approve_button_label != blank and 1 == 2 %}
+                            <div class="exit-popup__btns-wrapper">
+                          {% endif %}
+                            {% if section.settings.decline_button_label != blank and 1 == 2 %}
+                              <button
+                                class="btn btn--secondary"
+                                data-exit-popup-decline-button
+                              >
+                                {{ section.settings.decline_button_label }}
+                              </button>
+                            {% endif %}
+  
+                          {% if section.settings.decline_button_label != blank and section.settings.approve_button_label != blank %}
+                            </div>
+                          {% endif %}
+                        </div>
+                        <div
+                          class="exit-popup__decline-content exit-popup__decline-content--inactive"
+                          data-exit-popup-decline-content
+                        >
+                          {% if section.settings.decline_heading != blank %}
+                            <h2>{{ section.settings.decline_heading }}</h2>
+                          {% endif %}
+                          {% if section.settings.decline_text != blank %}
+                            <div class="rte">
+                              <div class="enlarge-text">{{ section.settings.decline_text }}</div>
+                            </div>
+                          {% endif %}
+                          {% if section.settings.return_button_label != blank %}
+                            <button
+                              class="btn btn--secondary"
+                              data-exit-popup-return-button
+                            >
+                              {{ section.settings.return_button_label }}
+                            </button>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </exit-popup>
+ {% endif %}
+
+ 
+{% schema %}
+  {
+    "name": "Exit Intent Popup",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "enable_exit_popup",
+        "label": "Enable Exit Intent Popup",
+        "default": false
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_test_mode",
+        "label": "Test Mode",
+        "info": "Forces the popup to show on every refresh, and should only be used for editing the popup. Ensure 'Test mode' is disabled when launching your store.",
+        "default": false
+      },
+      {
+        "type": "header",
+        "content": "Criteria"
+      }, 
+      {
+        "type": "checkbox",
+        "id": "cart_count",
+        "label": "Only Show when Cart has Items",
+        "info": "If false, will show anytime someone leaves the site",
+        "default": true
+      },      
+      {
+        "type": "range",
+        "id": "cart_cost",
+        "min": 0,
+        "max": 300,
+        "step": 5,
+        "label": "Minimum Cart Value",
+        "info": "Only show popup after cart total above",        
+        "default": 40
+      },            
+      {
+        "type": "header",
+        "content": "Text"
+      },
+      {
+        "type": "text",
+        "id": "heading",
+        "label": "Heading",
+        "default": "Wait!"
+      },
+      {
+        "type": "text",
+        "id": "subheading",
+        "label": "Heading",
+        "default": "Get a $5 Gift Card for Next Order"
+      },      
+      {
+        "type": "richtext",
+        "id": "text",
+        "label": "Text",
+        "default": "<p>when you order in next XXX min</p>"
+      },
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "Image",
+        "info": "Image to float to side"
+      },  
+      {
+        "type": "header",
+        "content": "Urgency"
+      },     
+      {
+        "type": "checkbox",
+        "id": "show_timer",
+        "label": "Show countdown timer",
+        "default": false
+      }, 
+      {
+        "type": "range",
+        "id": "timer_set",
+        "min": 0,
+        "max": 20,
+        "step": 1,
+        "label": "Number of Minutes for Timer",     
+        "default": 5
+      },       
+      {
+        "type": "text",
+        "id": "approve_button_label",
+        "label": "Approve Label",
+        "default": "Heck yea!"
+      },
+      {
+        "type": "url",
+        "id": "button_url",
+        "label": "Button Link",
+        "info": "Use Ziplinks app to have link add product to cart with coupon"
+      },
+      {
+        "type": "color",
+        "id": "button_color",
+        "label": "Button Color",
+        "default": "#B9295C"
+      },      
+      {
+        "type": "text",
+        "id": "decline_button_label",
+        "label": "Decline Label",
+        "default": "Continue Shopping"
+      }      
+    ]
+  }
+{% endschema %}
+
+
+ {{ '//ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js' | script_tag }}
+ {{ '//ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js' | script_tag }}
+  {{ 'ywm-dialog-trigger.js' | asset_url | script_tag }}
+    
+<script type="text/javascript">
+  if (typeof jQuery == 'undefined') {
+    console.log('nope');
+ }
+
+  jQuery(document).ready(function() {
+
+    var popup = jQuery('#ExitPopup-{{ section.id }}');
+    var inside = jQuery('#ExitPopup-{{ section.id }} .modal__centered');
+
+    // Create a close button element with the desired styling
+    var closeButton = jQuery('<span></span>').css({
+        'position': 'absolute',
+        'top': '10px',
+        'right': '10px',
+        'font-size': '24px',
+        'cursor': 'pointer'
+    }).html('&times;');
+
+      var continueButton = jQuery('#continue-shopping');
+
+    // Add the close button to the popup div
+   inside.append(closeButton);
+
+    // Create an overlay div with the desired styling
+    var overlay = jQuery('<div></div>').css({
+        'position': 'fixed',
+        'top': '0',
+        'visibility':'hidden',
+        'left': '0',
+        'width': '100%',
+        'height': '100%',
+        'background-color': 'rgba(0, 0, 0, 0.8)',
+        'z-index': '999'
+    });
+
+    // Add the overlay and popup to the page
+   jQuery('body').append(overlay, popup);
+   jQuery('html.supports-touch.lock-scroll').css('overflow','visible');
+
+    // Hide the popup and overlay initially
+   popup.hide();
+   overlay.hide();
+
+    // Show the popup and overlay when the user tries to leave the page
+    jQuery(document).on('mouseleave', function(e) {
+        if (e.clientY < 0) {
+            popup.show();
+            overlay.show();
+        }
+    });
+
+    // Hide the popup and overlay when the user clicks outside of it
+    jQuery(document).on('click', function(e) {
+        if (!jQuery(e.target).closest(popup).length) {
+            popup.hide();
+            overlay.hide();
+        }
+    });
+
+    // Hide the popup and overlay when the close button is clicked
+    closeButton.on('click', function() {
+        popup.hide();
+        overlay.hide();
+    });
+
+ 
+
+/*********************************************************/
+    if(screen.width < 500 ||
+       navigator.userAgent.match(/Android/i) ||
+       navigator.userAgent.match(/webOS/i) ||
+       navigator.userAgent.match(/iPhone/i) ||
+       navigator.userAgent.match(/iPod/i)) {
+          console.log('mobile');
+
+      // Triggers can also be chained for a sequence of behaviors (such as scroll down by 50%, then exit):
+            var dtPercent = new DialogTrigger(function() {
+               var dtExit = new DialogTrigger(showPopup, { trigger: 'timeout', timeout: 3500 });
+            }, { trigger: 'scrollUp', percentUp: 10 });
+      } else {
+        console.log('desktop');
+        //var dtExit = new DialogTrigger(showPopup, { trigger: 'exitIntent' });
+      }
+
+     function showPopup() {
+      	console.log('show popup');
+        popup.show();
+        overlay.show();
+    } 
+    
+/*********************************************************/
+  });
+</script>

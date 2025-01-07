@@ -1,0 +1,9 @@
+<style>
+  .horiz-menu {display:flex;flex-flow:row nowrap;padding:5px;}
+  .horiz-menu a {margin-right: 1.5rem;font-size: 1.1rem;color: #fff;text-decoration: none;}
+</style>
+<div class="horiz-menu">
+  {% for link in menu %}
+    <a href="{{ link.url }}">{{ link.title }}</a>
+  {% endfor %}
+</div>

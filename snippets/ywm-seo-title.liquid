@@ -1,0 +1,34 @@
+{% assign home_title = 'YellowWebMonkey Web and SEO services' %}
+{%- capture seo_title -%}
+{%- if request.page_type == 'search' and search.terms != blank -%}
+{{ search.terms | split: ' AND ' | last | split: 'product_type:' | last }} - {{ shop.name }}
+{% elsif request.path contains 'apps' %}
+{{ shop.name }} {{ request.path | replace: '-',' ' | remove: '/apps/' | replace: '/' | capitalize }}
+{% elsif request.page_type == 'index' %}{{ home_title }}
+{% elsif request.page_type == 'collection' %}{{ page_title }}
+{% elsif request.path contains 'collection' %}{{ collection.title }} - {{ page_title }}
+{% elsif request.page_type == 'product' %}{{ page_title }}
+{% elsif request.page_type == 'page' %}{{ page_title }}
+{% elsif request.page_type contains 'policy' %}{{ page_title }}
+{% elsif request.page_type == 'article' %}{{ blog.title }} - {{ page_title }}
+{% elsif request.page_type == 'blog' %}
+{%- if current_tags -%}
+{%- assign meta_tags = current_tags | join: ', ' %}
+{%- endif -%} 
+{{ blog.title }}{% if current_tags %} - {{ meta_tags | capitalize}}{% endif %}
+{% endif %}
+
+
+{%- if current_page != 1 -%}
+&ndash; {{ 'general.meta.page' | t: page: current_page }}
+{%- endif -%}
+{%- if template == 'password' -%}
+{{ shop.name }}
+{%- else -%}
+{%- unless page_title contains shop.name -%}
+&ndash; {{ shop.name }}
+{%- endunless -%}
+{%- endif -%}
+{%- endcapture -%}
+{% if seo_title.size > 70 %}{% assign seo_title = seo_title | truncate: 70 %}{% endif %}
+<title>{{ seo_title }}</title>

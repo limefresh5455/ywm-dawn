@@ -39,6 +39,12 @@
       <script src="{{ 'animations.js' | asset_url }}" defer="defer"></script>
     {%- endif -%}
 
+
+      <!-- YELLOWWEBMONKEY --> 
+   {{ 'ywm-custom.css' | asset_url | stylesheet_tag }}
+    {%- render 'ywm-seo-title' -%}
+    {%- render 'ywm-seo-description' -%}
+        
     {{ content_for_header }}
 
     {%- liquid
